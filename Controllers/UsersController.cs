@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.OpenApi.Validations.Rules;
 using UserManagementApi.Models;
 using UserManagementApi.Services;
@@ -24,6 +25,11 @@ public class UsersController : Controller
     [HttpPost]
     public ActionResult<User> Post([FromBody] User newUser)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState); 
+        }
+
         _userService.AddNewUser(newUser);
         return Ok(newUser);
     }
@@ -31,14 +37,39 @@ public class UsersController : Controller
     [HttpPut]
     public ActionResult Put([FromBody] User user)
     {
-        var result = _userService.UpdateUser(user);
-        return Ok(result);
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState); 
+        }
+
+        try 
+        {
+            return Ok(_userService.UpdateUser(user));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message); 
+        }
     }
 
     [HttpDelete("{id:int}")]
     public ActionResult Delete(int id)
     {
-        _userService.DeleteUser(id);
+        try 
+        {
+            _userService.DeleteUser(id);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message); 
+        }
+    }
+
+    [HttpPost("GenerateProxies")]
+    public async Task<ActionResult> GenerateProxies()
+    {
+        await new ClientGenerator.ClientGenerator().GenerateTypescript();
         return Ok();
     }
 }
