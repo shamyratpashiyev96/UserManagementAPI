@@ -1,3 +1,4 @@
+using UserManagementApi.Middlewares;
 using UserManagementApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,7 +11,14 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton<IUserService, UserService>();
 builder.Services.AddOpenApiDocument();
 
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
 var app = builder.Build();
+
+app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseMiddleware<AuthenticationMiddleware>();
+app.UseMiddleware<LoggingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
